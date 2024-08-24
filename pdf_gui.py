@@ -9,7 +9,7 @@ from pdf_converter import convert_pdf_to_images, merge_images_to_pdf, delete_tem
 class PDFConverterGUI:
     def __init__(self, master):
         self.master = master
-        self.master.title("PDF 转换器")
+        self.master.title("PDF_To_纯图PDF转换器")
 
         # 使用系统默认主题
         self.style = Style(theme='darkly')
@@ -61,10 +61,10 @@ class PDFConverterGUI:
         self.custom_dpi_frame = tk.Frame(master)
         self.custom_dpi_frame.pack(pady=10, padx=10, fill=tk.X)
 
-        self.custom_dpi_label = tk.Label(self.custom_dpi_frame, text="或输入自定义 DPI:")
+        self.custom_dpi_label = tk.Label(self.custom_dpi_frame, text="或输入自定义 DPI（支持150-750之间的整数）:")
         self.custom_dpi_label.pack(side=tk.TOP, padx=5, pady=(0, 5))
 
-        self.custom_dpi_entry = tk.Entry(self.custom_dpi_frame, width=10)
+        self.custom_dpi_entry = tk.Entry(self.custom_dpi_frame, width=20)
         self.custom_dpi_entry.pack(side=tk.TOP, padx=5)
 
         # 是否删除图片的单选框

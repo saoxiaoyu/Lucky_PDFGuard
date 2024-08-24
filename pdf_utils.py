@@ -1,5 +1,5 @@
 import os
-from os.path import isdir, join, split, splitext, basename
+from os.path import isdir, join
 
 def create_directory(directory_path):
     if not isdir(directory_path):
