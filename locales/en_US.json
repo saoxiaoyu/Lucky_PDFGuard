@@ -1,0 +1,19 @@
+{
+    "title": "PDF To Image PDF Converter",
+    "select_theme": "Select Theme:",
+    "select_pdf_file": "Select PDF File:",
+    "browse_file": "Browse File",
+    "dpi": "DPI",
+    "low_dpi": "150 DPI (Low Quality)",
+    "medium_dpi": "300 DPI (Medium Quality)",
+    "high_dpi": "450 DPI (High Quality)",
+    "very_high_dpi": "750 DPI (Very High Quality, May Cause Performance Issues)",
+    "custom_dpi": "Or Enter Custom DPI (Between 150 and 750):",
+    "delete_images": "Delete Temporary Images After Conversion",
+    "convert_button": "Start Conversion",
+    "progress_label": "Conversion Progress:",
+    "warning_custom_dpi": "Custom DPI is out of range. Using default DPI 300.",
+    "error_no_file": "Please select a PDF file first",
+    "success": "PDF conversion completed:",
+    "error_conversion": "An error occurred during conversion:"
+}

@@ -1,0 +1,19 @@
+{
+    "title": "PDF到纯图PDF转换器",
+    "select_theme": "选择主题:",
+    "select_pdf_file": "选择 PDF 文件:",
+    "browse_file": "选择文件",
+    "dpi": "DPI",
+    "low_dpi": "150 DPI (低质量)",
+    "medium_dpi": "300 DPI (一般质量)",
+    "high_dpi": "450 DPI (高质量)",
+    "very_high_dpi": "750 DPI (超高质量，可能会有严重性能问题)",
+    "custom_dpi": "或输入自定义 DPI（150到750之间）:",
+    "delete_images": "转换完成后删除临时图片",
+    "convert_button": "开始转换",
+    "progress_label": "转换进度:",
+    "warning_custom_dpi": "自定义 DPI 超出范围。使用默认 DPI 300。",
+    "error_no_file": "请先选择 PDF 文件",
+    "success": "PDF 转换完成：",
+    "error_conversion": "转换过程中发生错误:"
+}

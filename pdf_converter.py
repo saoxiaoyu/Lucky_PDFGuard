@@ -1,64 +1,126 @@
-import fitz
-import os
-from PyPDF2 import PdfMerger, PdfReader
-from reportlab.pdfgen import canvas
+import fitz as fz
+import os as o
+from PyPDF2 import PdfMerger as PM, PdfReader as PR
+from reportlab.pdfgen import canvas as cns
 
+
+def ensure_directory_exists(directory):
+    if not o.path.isdir(directory):
+        o.mkdir(directory)
+    print(f'Directory ensured: {directory}')
+
+
+def open_pdf_document(pdf_file):
+    try:
+        document = fz.open(pdf_file)
+        return document
+    except Exception as e:
+        print(f"Error opening PDF document {pdf_file}: {e}")
+        raise
+
+
+def save_pixmap_as_image(pixmap, image_path):
+    try:
+        pixmap.save(image_path)
+        print(f'Saved image: {image_path}')
+    except Exception as e:
+        print(f"Error saving image {image_path}: {e}")
+        raise
+
+
+def convert_page_to_image(page, dpi, image_path):
+    try:
+        # 获取页面尺寸
+        page_size = page.rect
+
+        # 计算缩放因子
+        zoom_factor = dpi / 72
+        matrix = fz.Matrix(zoom_factor, zoom_factor)
+
+        # 渲染页面为图片
+        pixmap = page.get_pixmap(matrix=matrix, alpha=False)
+        save_pixmap_as_image(pixmap, image_path)
+    except Exception as e:
+        print(f"Error converting page to image: {e}")
+        raise
 
 
 def convert_pdf_to_images(pdf_path, img_dir, pdf_fn, dpi, update_progress=None, total_pages=None):
-    if not os.path.isdir(img_dir):
-        os.mkdir(img_dir)
-    with fitz.open(pdf_path) as pdf:
-        for pg in range(pdf.page_count):
-            page = pdf[pg]
-            # 获取页面实际尺寸
-            page_rect = page.rect
-            # 转换为 DPI 单位
-            zoom_x = dpi / 72
-            zoom_y = dpi / 72
-            mat = fitz.Matrix(zoom_x, zoom_y)
-            pm = page.get_pixmap(matrix=mat, alpha=False)
-            # 保存图片时应用页面实际尺寸
-            pm.save(f'{img_dir}/{pg + 1}.png')
-            print(f'PDF文件||{pdf_fn}||第{pg + 1}页已转为图片')
+    ensure_directory_exists(img_dir)
 
+    document = open_pdf_document(pdf_path)
+    try:
+        for pg in range(document.page_count):
+            page = document[pg]
+            image_path = f'{img_dir}/{pg + 1}.png'
+            print(f'Processing page {pg + 1} of {pdf_fn}')
+            convert_page_to_image(page, dpi, image_path)
+
+            # 更新进度
             if update_progress and total_pages:
                 progress = (pg + 1) / total_pages * 100
                 update_progress(progress)
+    finally:
+        document.close()
+        print(f'Finished processing PDF: {pdf_fn}')
+
+
+def sort_image_files(img_dir):
+    image_files = [o.path.join(img_dir, fn) for fn in o.listdir(img_dir) if fn.endswith('.png')]
+    image_files.sort(key=lambda fn: int(o.path.splitext(o.path.basename(fn))[0]))
+    return image_files
+
+
+def create_temp_pdf(image_path, temp_pdf_path):
+    try:
+        img_doc = fz.open(image_path)
+        img_rect = img_doc[0].rect
+        temp_canvas = cns.Canvas(temp_pdf_path, pagesize=(img_rect.width, img_rect.height))
+        temp_canvas.drawImage(image_path, 0, 0, width=img_rect.width, height=img_rect.height)
+        temp_canvas.save()
+        print(f'Temporary PDF created: {temp_pdf_path}')
+    except Exception as e:
+        print(f"Error creating temporary PDF {temp_pdf_path}: {e}")
+        raise
 
 
 def merge_images_to_pdf(img_dir, output_pdf_path, pdf_fn, dpi):
-    # 获取文件夹中的所有图片
-    image_files = [os.path.join(img_dir, fn) for fn in os.listdir(img_dir) if fn.endswith('.png')]
-    image_files.sort(key=lambda fn: int(os.path.splitext(os.path.basename(fn))[0]))
+    image_files = sort_image_files(img_dir)
+    merger = PM()
 
-    # 创建 PDF 文件
-    result_pdf = PdfMerger()
-    for img_path in image_files:
-        img = fitz.open(img_path)
-        img_rect = img[0].rect  # 获取图像的实际尺寸
-        temp_pdf = f'{img_dir}/{os.path.basename(img_path).replace(".png", "_temp.pdf")}'
+    try:
+        for img_path in image_files:
+            temp_pdf = f'{img_dir}/{o.path.basename(img_path).replace(".png", "_temp.pdf")}'
+            create_temp_pdf(img_path, temp_pdf)
 
-        c = canvas.Canvas(temp_pdf, pagesize=(img_rect.width, img_rect.height))
-        c.drawImage(img_path, 0, 0, width=img_rect.width, height=img_rect.height)
-        c.save()
+            # 合并临时 PDF 文件
+            with open(temp_pdf, 'rb') as fp:
+                pdf_reader = PR(fp)
+                merger.append(pdf_reader)
 
-        with open(temp_pdf, 'rb') as fp:
-            pdf_reader = PdfReader(fp)
-            result_pdf.append(pdf_reader)
+            # 删除临时 PDF 文件
+            o.remove(temp_pdf)
+    except Exception as e:
+        print(f"Error merging images to PDF: {e}")
+        raise
+    finally:
+        if not o.path.isdir(o.path.dirname(output_pdf_path)):
+            o.mkdir(o.path.dirname(output_pdf_path))
 
-        os.remove(temp_pdf)  # 删除临时 PDF 文件
-
-    if not os.path.isdir(os.path.dirname(output_pdf_path)):
-        os.mkdir(os.path.dirname(output_pdf_path))
-
-    result_pdf.write(output_pdf_path)
-    print(f'PDF文件||{pdf_fn}||转换已成纯图像PDF文件：{os.path.basename(output_pdf_path)}')
-    result_pdf.close()
+        # 写入最终的 PDF 文件
+        merger.write(output_pdf_path)
+        merger.close()
+        print(f'PDF merged and saved as: {output_pdf_path}')
 
 
 def delete_temp_images(img_dir):
-    for file in os.listdir(img_dir):
+    for file in o.listdir(img_dir):
         if file.endswith('.png'):
-            os.remove(os.path.join(img_dir, file))
-    print('临时图片已删除')
+            file_path = o.path.join(img_dir, file)
+            try:
+                o.remove(file_path)
+                print(f'Deleted temporary image: {file_path}')
+            except Exception as e:
+                print(f"Error deleting temporary image {file_path}: {e}")
+                raise
+    print('All temporary images deleted.')
