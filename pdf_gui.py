@@ -6,6 +6,7 @@ from ttkbootstrap import Style
 from pdf_converter import convert_pdf_to_images, merge_images_to_pdf, delete_temp_images
 from PyPDF2 import PdfReader
 import json
+import webbrowser
 
 
 # 设置支持的语言和语言文件目录
@@ -37,10 +38,12 @@ def set_language(language_code):
     translations = load_translations(language_code)
 
 
+
 class PDFConverterGUI:
     def __init__(self, master):
         self.master = master
         self.master.title(_("title"))
+        self.author_frame = self.create_author_link(master)
 
         # 使用系统默认主题
         self.style = Style(theme='darkly')
@@ -86,6 +89,15 @@ class PDFConverterGUI:
         self.progress_var = tk.DoubleVar(value=0)
         self.progress_bar = self.create_progress_bar(self.progress_frame)
         self.progress_percentage = self.create_progress_percentage(self.progress_frame)
+
+    # 在 PDFConverterGUI 类中添加一个新方法来创建作者链接
+    def create_author_link(self, master):
+        frame = tk.Frame(master)
+        frame.pack(pady=10, padx=10, fill=tk.X, side=tk.BOTTOM)
+        link = tk.Label(frame, text="作者博客", fg="red", font=("Arial", 12, "bold"), cursor="hand2")
+        link.pack(side=tk.RIGHT, padx=5)
+        link.bind("<Button-1>", lambda e: webbrowser.open("https://www.xiaoyu.ac.cn"))
+        return frame
 
     def create_theme_language_frame(self):
         frame = tk.Frame(self.master)
@@ -158,7 +170,7 @@ class PDFConverterGUI:
 
     def create_delete_images_frame(self, master):
         frame = tk.Frame(master)
-        frame.pack(pady=10, padx=10, fill=tk.X)
+        frame.pack(pady=10, padx=10, fill=tk.BOTH, expand=True)
         return frame
 
     def create_delete_images_checkbox(self, parent):
@@ -177,13 +189,14 @@ class PDFConverterGUI:
         return frame
 
     def create_progress_bar(self, parent):
-        progress_bar = tk.ttk.Progressbar(parent, variable=self.progress_var, maximum=100, length=350, style='info.Horizontal.TProgressbar')
-        progress_bar.pack(side=tk.LEFT, padx=5)
+        progress_bar = tk.ttk.Progressbar(parent, variable=self.progress_var, maximum=100,
+                                          style='info.Horizontal.TProgressbar')
+        progress_bar.pack(side=tk.TOP, padx=10, pady=(0, 5), fill=tk.X, expand=True)
         return progress_bar
 
     def create_progress_percentage(self, parent):
-        percentage_label = tk.Label(parent, text="0%")
-        percentage_label.pack(side=tk.LEFT, padx=5)
+        percentage_label = tk.Label(parent, text="0%", font=("Arial", 10))
+        percentage_label.pack(side=tk.TOP, pady=(0, 10))
         return percentage_label
 
     def browse_file(self):

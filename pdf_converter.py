@@ -1,6 +1,6 @@
 import fitz as fz
 import os as o
-from PyPDF2 import PdfMerger as PM, PdfReader as PR
+from PyPDF2 import PdfWriter, PdfReader as PR
 from reportlab.pdfgen import canvas as cns
 
 
@@ -86,7 +86,7 @@ def create_temp_pdf(image_path, temp_pdf_path):
 
 def merge_images_to_pdf(img_dir, output_pdf_path, pdf_fn, dpi):
     image_files = sort_image_files(img_dir)
-    merger = PM()
+    merger = PdfWriter()
 
     try:
         for img_path in image_files:
@@ -96,7 +96,7 @@ def merge_images_to_pdf(img_dir, output_pdf_path, pdf_fn, dpi):
             # 合并临时 PDF 文件
             with open(temp_pdf, 'rb') as fp:
                 pdf_reader = PR(fp)
-                merger.append(pdf_reader)
+                merger.add_page(pdf_reader.pages[0])
 
             # 删除临时 PDF 文件
             o.remove(temp_pdf)
@@ -107,9 +107,14 @@ def merge_images_to_pdf(img_dir, output_pdf_path, pdf_fn, dpi):
         if not o.path.isdir(o.path.dirname(output_pdf_path)):
             o.mkdir(o.path.dirname(output_pdf_path))
 
+        # 设置 PDF 元数据
+        merger.add_metadata({
+            '/Author': 'WY'
+        })
+
         # 写入最终的 PDF 文件
-        merger.write(output_pdf_path)
-        merger.close()
+        with open(output_pdf_path, 'wb') as output_pdf:
+            merger.write(output_pdf)
         print(f'PDF merged and saved as: {output_pdf_path}')
 
 
